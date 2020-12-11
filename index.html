@@ -245,11 +245,47 @@
   document.body.addEventListener('dragover', cancel);
   document.body.addEventListener('dragenter', cancel);
 
+
+
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+  const fileurl = urlParams.get('url');
+  
+  function loadFile(urlToSend) {
+    var req = new XMLHttpRequest();
+    req.open("GET", urlToSend, true);
+    req.responseType = "blob";
+    req.onload = function (event) {
+      var f = req.response;
+	  f.lastModifiedDate = new Date();
+	  f.name = "file.sb2";
+	  
+	  if (f) {
+        location.hash = '#zip';
+        show('zip');
+        var ext = f.name.split('.').pop();
+        if (ext === 'sb2' || ext === 'zip') {
+          var request = P.IO.loadSB2File(f);
+        } else if (ext === 'json') {
+          request = P.IO.loadJSONFile(f);
+        }
+        if (request) {
+          P.player.showProgress(request, function(stage) {
+            stage.triggerGreenFlag();
+          });
+        }
+      }
+    };
+    req.send();
+  }
+  
+  if(fileurl)
+    loadFile(fileurl);
+
   document.body.addEventListener('drop', function(e) {
     e.preventDefault();
 
     var f = e.dataTransfer.files[0];
-
     if (f) {
       location.hash = '#zip';
       show('zip');
